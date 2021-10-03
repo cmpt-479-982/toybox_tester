@@ -1,0 +1,16 @@
+name: "Test rust toys"
+
+on:
+  push:
+    branches: [ a2 ]
+  pull_request:
+    branches: [ a2 ]
+  workflow_dispatch:
+  
+jobs:
+  do_testing:
+    name: "Run tests"
+    uses: cmpt-479-982/toybox_tester/.github/workflows/tester.yml@main
+    with:
+#     Put list of binaries you want to test. Name for a given tool must be the same for the rust binary and the toybox binary
+      toys_to_test: ${{ toJSON('[ cp, ls, file, grep ]') }}

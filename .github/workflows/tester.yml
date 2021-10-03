@@ -5,7 +5,7 @@ on:
     inputs:
       token:
         description: Github token
-        required: true
+        required: false
         type: string
       toys_to_test:
         description: "A list of binary names to test, encoded in JSON. Use a YAML array wrapped in toJSON(...) for ease of use."
@@ -26,13 +26,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Print passed github secret token
-      run: |
-        echo "Passed secret token:"
-        echo "${{ inputs.token }}"
-        echo "Existing secret token:"
-        echo "${{ github.token }}"
-    
     - name: Checkout repo
       uses: actions/checkout@v2
     

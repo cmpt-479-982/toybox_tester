@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      github_token:
+        description: "The github token of the calling workflow, needed for clippy to function."
+        required: true
         
 env:
   CARGO_TERM_COLOR: always
@@ -41,7 +45,7 @@ jobs:
     - name: Run clippy check
       uses: actions-rs/clippy-check@v1
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.github_token }}
         args: --workspace --all-targets
         
     - name: Run cargo tests

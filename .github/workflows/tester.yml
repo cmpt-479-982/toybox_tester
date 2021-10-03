@@ -1,0 +1,107 @@
+name: Run toybox tests against rust toys
+
+on:
+  workflow_call:
+    inputs:
+      toys_to_test:
+        description: "A list of binary names to test, encoded in JSON. Use a YAML array wrapped in toJSON(...) for ease of use."
+        required: true
+        type: string
+      toybox_repo_ref:
+        description: "A branch, tag, or commit hash to control how the toybox repo is checked out. Passed to actions/checkout, and defaults to the default branch"
+        required: false
+        type: string
+        default: ""
+        
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Build and check rust code
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    
+    - name: Install nightly rust and clippy
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        components: clippy
+        
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v1
+    
+    - name: Build projects
+      run: cargo build --verbose --workspace --all-targets
+      
+    - name: Run clippy check
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --workspace --all-targets
+        
+    - name: Run cargo tests
+      run: cargo test --verbose --workspace --all-targets
+      
+    - name: Use cargo build to put binaries in special output folder
+      run: |
+        mkdir ./rust_bins
+        cargo build --workspace --all-targets -Z unstable-options --out-dir ./rust_bins
+      
+    - name: Upload built rust bins for testing job
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        name: rust_bins
+        path: ./rust_bins
+  
+  toybox:
+    name: Test binary
+    runs-on: ubuntu-latest
+    needs: [ rust ]
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        program: ${{ fromJSON(inputs.toys_to_test) }}
+    
+    steps:
+    - name: Checkout toybox
+      uses: actions/checkout@v2
+      with:
+        repository: landley/toybox
+        ref: ${{ inputs.toybox_repo_ref }}
+
+    - name: Build toybox
+      run: |
+        make defconfig
+        make
+
+    - name: HACKY - Patch toybox single.sh script so we can hijack the binaries run by tests
+      # TODO: use an actual file in a repo somewhere instead of this hacky bullshit...
+      run: |
+        echo "Overwriting scripts/single.sh"
+
+        echo '#!/bin/bash' > scripts/single.sh
+        echo 'cp ./rust_bins/$@ ./generated/testdir/' >> scripts/single.sh
+
+        echo "Contents of patched file:"
+        cat scripts/single.sh
+
+    - name: Create rust binary directory
+      run: mkdir ./rust_bins
+
+    - name: Download built rust bins
+      uses: actions/download-artifact@v2.0.10
+      with:
+        name: rust_bins
+        path: ./rust_bins
+
+    - name: Run tests against ${{ matrix.program }} binary
+      env:
+        VERBOSE: fail
+      run: |
+        make test_${{ matrix.program }}

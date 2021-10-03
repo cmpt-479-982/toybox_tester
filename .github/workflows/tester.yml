@@ -52,7 +52,7 @@ jobs:
     - name: Run clippy check
       uses: actions-rs/clippy-check@v1
       with:
-        token: ${{ secrets.github_token }}
+        token: ${{ github.token }}
         args: --workspace --all-targets
         
     - name: Run cargo tests

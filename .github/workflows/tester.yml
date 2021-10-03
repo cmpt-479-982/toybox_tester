@@ -3,6 +3,10 @@ name: Run toybox tests against rust toys
 on:
   workflow_call:
     inputs:
+      token:
+        description: Github token
+        required: true
+        type: string
       toys_to_test:
         description: "A list of binary names to test, encoded in JSON. Use a YAML array wrapped in toJSON(...) for ease of use."
         required: true
@@ -12,10 +16,6 @@ on:
         required: false
         type: string
         default: ""
-    secrets:
-      github_token:
-        description: "The github token of the calling workflow, needed for clippy to function."
-        required: true
         
 env:
   CARGO_TERM_COLOR: always
@@ -29,9 +29,9 @@ jobs:
     - name: Print passed github secret token
       run: |
         echo "Passed secret token:"
-        echo "${{ secrets.github_token }}"
+        echo "${{ inputs.token }}"
         echo "Existing secret token:"
-        echo "${{ secrets.GITHUB_TOKEN }}"
+        echo "${{ github.token }}"
     
     - name: Checkout repo
       uses: actions/checkout@v2

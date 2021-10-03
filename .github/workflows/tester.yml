@@ -3,10 +3,6 @@ name: Run toybox tests against rust toys
 on:
   workflow_call:
     inputs:
-      token:
-        description: Github token
-        required: false
-        type: string
       toys_to_test:
         description: "A list of binary names to test, encoded in JSON. Use a YAML array wrapped in toJSON(...) for ease of use."
         required: true

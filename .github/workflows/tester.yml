@@ -26,6 +26,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Print passed github secret token
+      run: |
+        echo "Passed secret token:"
+        echo "${{ secrets.github_token }}"
+        echo "Existing secret token:"
+        echo "${{ secrets.GITHUB_TOKEN }}"
+    
     - name: Checkout repo
       uses: actions/checkout@v2
     

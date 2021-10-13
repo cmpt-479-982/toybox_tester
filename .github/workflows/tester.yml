@@ -57,6 +57,7 @@ jobs:
       with:
         name: rust_bins
         path: ./rust_bins
+        retention-days: 1
   
   toybox:
     name: Test binary
